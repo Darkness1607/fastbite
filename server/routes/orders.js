@@ -27,8 +27,17 @@ router.get('/', authenticateToken, (req, res) => {
 });
 
 // POST /api/orders (protected) — Create a new order
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '';
+// Read env vars at invocation time (not module load) so Netlify dashboard vars are picked up
+function getTelegramConfig() {
+  const token = process.env.TELEGRAM_BOT_TOKEN || '';
+  const chatId = process.env.TELEGRAM_CHAT_ID || '';
+  if (!token || !chatId) {
+    console.log('⚠️ Telegram env vars not set. Check Netlify dashboard → Environment variables.');
+    console.log(`   TELEGRAM_BOT_TOKEN is ${token ? '✅ set' : '❌ missing'}`);
+    console.log(`   TELEGRAM_CHAT_ID is ${chatId ? '✅ set' : '❌ missing'}`);
+  }
+  return { token, chatId };
+}
 
 router.post('/', authenticateToken, [
     body('items').isArray({ min: 1 }).withMessage('Cart must have at least one item'),
@@ -49,8 +58,10 @@ router.post('/', authenticateToken, [
             'INSERT INTO orders (user_id, items, total, address) VALUES (?, ?, ?, ?)'
         ).run(req.user.userId, JSON.stringify(items), total, address);
 
-        // Send Telegram notification (fire and forget)
-        sendTelegramNotification(req.user, items, total, address, customerName, customerPhone);
+        // Send Telegram notification (fire and forget — don't block the response)
+        sendTelegramNotification(req.user, items, total, address, customerName, customerPhone).catch(e => {
+          console.error('Telegram notification failed (non-blocking):', e.message);
+        });
 
         res.status(201).json({
             success: true,
@@ -84,8 +95,9 @@ router.delete('/clear', authenticateToken, (req, res) => {
 
 // Helper: Send Telegram notification
 async function sendTelegramNotification(user, items, total, address, customerName, customerPhone) {
-    if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
-        console.log('Telegram not configured. Skipping notification.');
+    const { token, chatId } = getTelegramConfig();
+    if (!token || !chatId) {
+        console.log('⚠️ Telegram notification skipped — env vars missing');
         return;
     }
 
@@ -102,17 +114,25 @@ async function sendTelegramNotification(user, items, total, address, customerNam
 
         message += `\n💰 *Total: $${total.toFixed(2)}*`;
 
-        const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+        const url = `https://api.telegram.org/bot${token}/sendMessage`;
 
-        await fetch(url, {
+        console.log(`📨 Sending Telegram notification to chat ${chatId}...`);
+        const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                chat_id: TELEGRAM_CHAT_ID,
+                chat_id: chatId,
                 text: message,
                 parse_mode: 'Markdown'
             })
         });
+
+        if (!response.ok) {
+            const errorBody = await response.text().catch(() => 'unknown');
+            console.error(`❌ Telegram API error (${response.status}): ${errorBody}`);
+        } else {
+            console.log('✅ Telegram notification sent successfully');
+        }
     } catch (err) {
         console.error('Telegram notification error:', err);
     }
