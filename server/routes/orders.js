@@ -58,10 +58,8 @@ router.post('/', authenticateToken, [
             'INSERT INTO orders (user_id, items, total, address) VALUES (?, ?, ?, ?)'
         ).run(req.user.userId, JSON.stringify(items), total, address);
 
-        // Send Telegram notification (fire and forget — don't block the response)
-        sendTelegramNotification(req.user, items, total, address, customerName, customerPhone).catch(e => {
-          console.error('Telegram notification failed (non-blocking):', e.message);
-        });
+        // Send Telegram notification (await with timeout so Lambda doesn't freeze before it completes)
+        await sendTelegramNotification(req.user, items, total, address, customerName, customerPhone);
 
         res.status(201).json({
             success: true,
@@ -101,6 +99,10 @@ async function sendTelegramNotification(user, items, total, address, customerNam
         return;
     }
 
+    // AbortController with 5-second timeout so the order response isn't delayed too much
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
     try {
         let message = '🍔 *New Fast Food Order!*\n\n';
         message += `👤 *Customer:* ${customerName || user.name}\n`;
@@ -124,8 +126,11 @@ async function sendTelegramNotification(user, items, total, address, customerNam
                 chat_id: chatId,
                 text: message,
                 parse_mode: 'Markdown'
-            })
+            }),
+            signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
             const errorBody = await response.text().catch(() => 'unknown');
@@ -134,7 +139,11 @@ async function sendTelegramNotification(user, items, total, address, customerNam
             console.log('✅ Telegram notification sent successfully');
         }
     } catch (err) {
-        console.error('Telegram notification error:', err);
+        if (err.name === 'AbortError') {
+            console.error('⏱️ Telegram notification timed out after 5s');
+        } else {
+            console.error('❌ Telegram notification error:', err.message);
+        }
     }
 }
 
