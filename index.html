@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fast Food Online Shop</title>
+    <!-- Add Google Fonts for much better typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link crossorigin rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <header>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <button id="dark-mode-toggle" class="theme-btn">🌙</button>
+            <div class="logo">🍔 FastBite</div>
+        </div>
+        <div class="header-nav">
+            <a href="#" class="header-link" id="nav-home">Home</a>
+            <a href="#" class="header-link" id="nav-profile">Profile</a>
+            <!-- Auth Buttons -->
+            <button class="auth-btn" id="btn-login" style="display: none;">Log In</button>
+            <div class="user-menu" id="user-menu" style="display: none;">
+                <span class="user-greeting" id="user-greeting">👤 <span id="user-name-display">User</span></span>
+                <button class="auth-btn auth-btn-outline" id="btn-logout">Logout</button>
+            </div>
+            <div class="cart-icon" id="cart-icon">
+                🛒 Cart (<span id="cart-count">0</span>)
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="home-section">
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1>Craving Fast Food?</h1>
+            <p>Get the best burgers, fries, and pizzas delivered hot and fresh!</p>
+            <button class="hero-btn" onclick="document.getElementById('category-filters').scrollIntoView({behavior: 'smooth'})">Order Now 🛵</button>
+        </section>
+
+        <!-- Recent Offers Section -->
+        <section class="offers menu">
+            <h2>Recent Offers</h2>
+            <div class="grid" id="offers-grid">
+                <!-- Offers will be injected here -->
+            </div>
+        </section>
+
+        <!-- Menu Section -->
+        <section class="menu">
+            <h2>Our Menu</h2>
+            <div class="filters" id="category-filters">
+                <button class="filter-btn active" data-filter="All">All</button>
+                <button class="filter-btn" data-filter="Burgers">Burgers</button>
+                <button class="filter-btn" data-filter="Pizzas">Pizzas</button>
+                <button class="filter-btn" data-filter="Chicken">Chicken</button>
+                <button class="filter-btn" data-filter="Sandwiches">Sandwiches/Wraps</button>
+                <button class="filter-btn" data-filter="Sides">Sides</button>
+                <button class="filter-btn" data-filter="Desserts">Desserts</button>
+                <button class="filter-btn" data-filter="Drinks">Drinks</button>
+            </div>
+            <div class="grid" id="menu-grid">
+                <!-- Menu Items will be dynamically populated here via JavaScript -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Profile Section -->
+    <main id="profile-section" style="display: none;">
+        <!-- Guest placeholder -->
+        <div id="profile-guest-placeholder" class="guest-placeholder" style="display: none;">
+            <section class="hero" style="margin-bottom: 0;">
+                <h1>🔒 Profile</h1>
+                <p>Log in or create an account to manage your profile, save favorites, and track orders!</p>
+                <button class="hero-btn" id="guest-login-btn">Log In / Register</button>
+            </section>
+        </div>
+
+        <!-- Authenticated Profile Content -->
+        <div id="profile-authenticated-content" style="display: none;">
+            <section class="profile-header hero">
+                <h1>Your Profile</h1>
+                <p>Welcome back, <span id="profile-welcome-name">Foodie</span>!</p>
+            </section>
+
+            <section class="menu profile-info">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2>Your Details</h2>
+                    <button class="filter-btn" id="edit-profile-btn">✏️ Edit</button>
+                </div>
+                <div class="profile-card" id="profile-display-card">
+                    <div class="profile-avatar">👤</div>
+                    <div class="profile-details-text">
+                        <p><strong>Name:</strong> <span id="display-name">John Doe</span></p>
+                        <p><strong>Phone:</strong> <span id="display-phone">+1 234 567 890</span></p>
+                        <p><strong>Address:</strong> <span id="display-address">123 Fast Food St, Burger City</span></p>
+                    </div>
+                </div>
+
+                <!-- Hidden Edit Form -->
+                <div class="profile-card" id="profile-edit-card" style="display: none;">
+                    <form id="profile-form">
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input type="text" id="edit-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="tel" id="edit-phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Delivery Address</label>
+                            <textarea id="edit-address" rows="2" required></textarea>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button type="submit" class="checkout-btn" style="padding: 0.5rem; flex: 1;">Save</button>
+                            <button type="button" class="checkout-btn" id="cancel-edit-btn" style="padding: 0.5rem; background: #a4b0be; flex: 1;">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Favorites Section -->
+            <section class="menu favorites-section">
+                <h2>Your Favorites ❤️</h2>
+                <div class="grid" id="favorites-grid">
+                    <!-- Favorite items will be injected here -->
+                    <p class="empty-history-msg" style="grid-column: 1 / -1;">No favorites yet. Click the ❤️ on a menu item to save it here!</p>
+                </div>
+            </section>
+
+            <section class="menu transaction-history">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2>Transaction History</h2>
+                    <button class="filter-btn" id="clear-history-btn" style="border-color: #a4b0be; color: inherit; padding: 0.4rem 1rem; font-size: 0.9rem;">🗑️ Clear</button>
+                </div>
+                <div class="history-list" id="history-list">
+                    <p class="empty-history-msg">No past orders found.</p>
+                    <!-- History items will be injected here -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Shopping Cart Sidebar -->
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <h2>Your Cart</h2>
+            <button id="close-cart" class="close-btn">&times;</button>
+        </div>
+        
+        <div class="cart-items" id="cart-items">
+            <!-- Items will be added here dynamically via JavaScript -->
+            <p class="empty-cart-msg">Your cart is empty.</p>
+        </div>
+        
+        <div class="cart-footer">
+            <h3>Total: $<span id="cart-total">0.00</span></h3>
+            <button class="checkout-btn" id="checkout-btn">Checkout</button>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar for Mobile -->
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item active" id="bottom-nav-home">
+            <span class="nav-icon">🏠</span>
+            <span>Home</span>
+        </a>
+        <a href="#" class="nav-item" onclick="openCart(event)">
+            <span class="nav-icon">🛒</span>
+            <span>Cart</span>
+            <span class="nav-badge" id="bottom-cart-count">0</span>
+        </a>
+        <a href="#" class="nav-item" id="bottom-nav-profile">
+            <span class="nav-icon">👤</span>
+            <span>Profile</span>
+        </a>
+    </nav>
+
+    <!-- Background overlay when cart is open -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Checkout Modal -->
+    <div class="modal" id="checkout-modal">
+        <div class="modal-content">
+            <span class="close-modal" id="close-modal">&times;</span>
+            <h2>Delivery Details</h2>
+            <form id="checkout-form">
+                <div class="form-group">
+                    <label for="cx-name">Name</label>
+                    <input type="text" id="cx-name" required placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label for="cx-phone">Phone Number</label>
+                    <input type="tel" id="cx-phone" required placeholder="+1 234 567 890">
+                </div>
+                <div class="form-group">
+                    <label for="cx-address">Delivery Address</label>
+                    <textarea id="cx-address" rows="3" required placeholder="123 Fast Food St."></textarea>
+                </div>
+                <button type="submit" class="checkout-btn" id="confirm-checkout-btn">Confirm Order</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal" id="login-modal">
+        <div class="modal-content">
+            <span class="close-modal" id="close-login-modal">&times;</span>
+            <h2>Log In</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required placeholder="you@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required placeholder="Enter your password">
+                </div>
+                <button type="submit" class="checkout-btn" id="login-submit-btn">Log In</button>
+                <p class="auth-switch-text">
+                    Don't have an account? <a href="#" id="switch-to-register">Create one</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal" id="register-modal">
+        <div class="modal-content">
+            <span class="close-modal" id="close-register-modal">&times;</span>
+            <h2>Create Account</h2>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="reg-name">Name</label>
+                    <input type="text" id="reg-name" required placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label for="reg-email">Email</label>
+                    <input type="email" id="reg-email" required placeholder="you@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="reg-phone">Phone (optional)</label>
+                    <input type="tel" id="reg-phone" placeholder="+1 234 567 890">
+                </div>
+                <div class="form-group">
+                    <label for="reg-password">Password</label>
+                    <input type="password" id="reg-password" required minlength="6" placeholder="At least 6 characters">
+                </div>
+                <button type="submit" class="checkout-btn" id="register-submit-btn">Create Account</button>
+                <p class="auth-switch-text">
+                    Already have an account? <a href="#" id="switch-to-login">Log in</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container"></div>
+
+    <!-- Link to our JavaScript logic -->
+    <script src="script.js"></script>
+</body>
+</html>

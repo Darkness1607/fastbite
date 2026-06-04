@@ -1,0 +1,37 @@
+# === FastBite — Netlify Deployment Configuration ===
+
+[build]
+  # The root package.json is at the project root
+  command = "echo 'No build step needed for static files'"
+  publish = "."
+  functions = "netlify/functions"
+
+[dev]
+  # Mimic the Netlify function/redirect setup locally via `netlify dev`
+  command = "node server/server.js"
+  port = 8888
+  targetPort = 3000
+
+# === Redirects ===
+
+# All /api/* requests go to the serverless function
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+# SPA fallback: serve index.html for any unmatched route (except /api handled above)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# === Headers ===
+
+# Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
